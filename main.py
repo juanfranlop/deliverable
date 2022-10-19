@@ -108,7 +108,7 @@ def waste_contribution(batch, pos):
     return successor + predecessor
 
 
-# Number of swaps = number of 2-combinations of a set of 52 elements = 
+# Finds the optimal swap to minimize waste metric 
 def optimal_swap(batch: list) -> tuple:
     '''
     This function finds the swap that minimizes the waste metric of the batch
@@ -161,16 +161,16 @@ def is_invalid_batch_int(raw_batch: list) -> bool:
 
     # Check no duplicates
     if len(raw_batch) != batch_size:
-        return is_valid, 'incorrect size'
+        return is_valid, 'Batch file malformed: incorrect size'
 
     # Check no duplicates
     if len(set(raw_batch)) != len(raw_batch):
-        return is_valid, 'duplicate'
+        return is_valid, 'Batch file malformed: duplicate records'
 
     # Check validity of all the data points
     for data_point in raw_batch:
         if validate_data_point(data_point)[1] == -1:
-            return is_valid, data_point
+            return is_valid, f'Batch file malformed: found not valid data point: {data_point}'
     
     # Batch is valid
     is_valid = True
@@ -184,11 +184,11 @@ def is_invalid_batch(full_path_raw_batch_name: str):
     '''    
     raw_batch = open_raw_batch(full_path_raw_batch_name)
     if raw_batch != None:
-        is_valid, data_point = is_invalid_batch_int(raw_batch)
+        is_valid, error_message = is_invalid_batch_int(raw_batch)
         if is_valid == False:
-            print(f'Batch malformed. Data point is not valid: {data_point}')
-        else:
-            print("Valid batch")
+            print(error_message)
+        elif is_valid == True:
+            print("The batch is syntactically valid")
 
 
 @app.command()
@@ -252,33 +252,34 @@ def process_batch(full_path_raw_batch_name: str):
     
         # Step 1: receive an alarm if the batch is invalid
 
-        is_valid, data_point = is_invalid_batch_int(raw_batch)
+        is_valid, error_message = is_invalid_batch_int(raw_batch)
         if is_valid == False:
-            print(f'Batch is malformed. Data point is not valid: {data_point}')
+            print(error_message)
 
-        # Step 2: understand the waste metric for the batch
-        batch = format_batch(raw_batch)
-        print(f'Waste metric: {waste_metric_int(batch)}')
+        elif is_valid == True:
+            # Step 2: understand the waste metric for the batch
+            batch = format_batch(raw_batch)
+            print(f'Waste metric: {waste_metric_int(batch)}')
 
-        # Step 3: receive a proactive recommendation that maximizes reduction
-        #         in the waste metric if one swap of any two entries anywhere
-        #         in the batch could occur
-        i_data_point_1, j_data_point_1, initial_waste, int_waste, new_batch = optimal_swap(batch)
-        message = f'By swapping {i_data_point_1} and {j_data_point_1}, '\
-                  f'you could reduce waste metric from ' \
-                  f'{initial_waste} to {int_waste}'
-        print(message)
+            # Step 3: receive a proactive recommendation that maximizes reduction
+            #         in the waste metric if one swap of any two entries anywhere
+            #         in the batch could occur
+            i_data_point_1, j_data_point_1, initial_waste, int_waste, new_batch = optimal_swap(batch)
+            message = f'By swapping {i_data_point_1} and {j_data_point_1}, '\
+                    f'you could reduce waste metric from ' \
+                    f'{initial_waste} to {int_waste}'
+            print(message)
 
-        # Step 4: receive a proactive recommendation that maximizes reduction
-        #         in the waste metric if two swaps of any two entries anywhere
-        #         in the batch could occur
-        i_data_point_2, j_data_point_2, _, final_waste, _ = optimal_swap(new_batch)
+            # Step 4: receive a proactive recommendation that maximizes reduction
+            #         in the waste metric if two swaps of any two entries anywhere
+            #         in the batch could occur
+            i_data_point_2, j_data_point_2, _, final_waste, _ = optimal_swap(new_batch)
 
-        message = f'By swapping {i_data_point_1} and {j_data_point_1}, then ' \
-                 f'swapping {i_data_point_2} and {j_data_point_2}, you ' \
-                 f'could reduce waste metric ' \
-                 f'from {initial_waste} to {final_waste}'
-        print(message)
+            message = f'By swapping {i_data_point_1} and {j_data_point_1}, then ' \
+                    f'swapping {i_data_point_2} and {j_data_point_2}, you ' \
+                    f'could reduce waste metric ' \
+                    f'from {initial_waste} to {final_waste}'
+            print(message)
 
 
 if __name__ == '__main__':

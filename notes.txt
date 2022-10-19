@@ -1,5 +1,0 @@
-pyinstaller --onefile --paths C:\Users\JUANLOP\JUANLOP_CODE\deliverable\venv\Lib\site-packages main.py
-run with venv deactivated
-
-
-https://ubuntu.com/tutorials/install-ubuntu-on-wsl2-on-windows-10#3-download-ubuntu
